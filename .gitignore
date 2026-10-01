@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+data/
+checkpoints/
+weights/
+*.pth
+wandb/
+viz_out/
+out/
+*.mp4

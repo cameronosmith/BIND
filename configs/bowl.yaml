@@ -1,0 +1,18 @@
+# Single LIBERO task: "pick up the black bowl from table center and place it on the plate"
+# (libero_spatial, canonical task_id 2). No language — scene+wrist images only.
+benchmark: libero_spatial
+task_ids: "2"
+n_window: 8
+frame_stride: 3
+img_size: 448
+n_height_bins: 32
+pred_size: 56
+n_gripper_bins: 32
+n_rot_bins: 32
+cross_view_layers: 0        # 0 = per-voxel MLP fusion; 4-5 = + cross-view attention
+upright: 1
+batch_size: 16
+lr: 5.0e-5
+epochs: 30
+gripper_loss_weight: 0.5
+rotation_loss_weight: 0.5
