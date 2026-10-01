@@ -1,8 +1,8 @@
 """Pre-render libero demos with BOTH agentview AND robot0_eye_in_hand simultaneously.
 
 Per demo, dumps:
-  frames_bev/   — agentview PNGs (flipped to training convention)
-  frames_wrist/ — robot0_eye_in_hand PNGs (flipped)
+  frames_bev/   — agentview JPGs (flipped to training convention)
+  frames_wrist/ — robot0_eye_in_hand JPGs (flipped)
   eef_pos.npy, eef_quat.npy, gripper.npy, actions.npy   — robot state
   pix_uv_bev.npy   (T, 2) — EEF projected into agentview
   pix_uv_wrist.npy (T, 2) — EEF projected into wrist view (varies per frame)
@@ -61,8 +61,9 @@ def render_demo(env, states, actions, image_size, out_dir):
             rgb = np.ascontiguousarray(np.flipud(rgb))
             if rgb.shape[0] != image_size or rgb.shape[1] != image_size:
                 rgb = cv2.resize(rgb, (image_size, image_size), interpolation=cv2.INTER_LINEAR)
-            cv2.imwrite(str(out_dir / sub / f"{t:06d}.png"),
-                        cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR))
+            cv2.imwrite(str(out_dir / sub / f"{t:06d}.jpg"),
+                        cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR),
+                        [cv2.IMWRITE_JPEG_QUALITY, 92])
 
         # ---- EEF state ----
         eef_pos  = np.asarray(obs["robot0_eef_pos"],  dtype=np.float64)

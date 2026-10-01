@@ -1,8 +1,9 @@
-# Conda environment for BIND. Reproduces the working setup:
-#   Python 3.10, PyTorch 2.6.0 + CUDA 12.4.
-# Create with:   conda env create -f environment.yml && conda activate bind
-# (Training needs only the core deps; robosuite + LIBERO are required for
-#  prerender.py and eval.py. See the README "Environment" section.)
+# Conda env for TRAINING BIND (Python 3.10, PyTorch 2.6.0 + CUDA 12.4).
+# With the packaged dataset (scripts/download_data.sh), training needs NO
+# simulator — just this env. For prerender.py / eval.py (LIBERO sim), use the
+# SEPARATE environment-sim.yml (its old LIBERO pins conflict with this modern
+# stack, so they must live in different envs).
+#   conda env create -f environment.yml && conda activate bind
 name: bind
 channels:
   - conda-forge
@@ -10,11 +11,10 @@ dependencies:
   - python=3.10
   - pip
   - pip:
-      # PyTorch build for CUDA 12.4 (public PyTorch index)
+      # PyTorch build for CUDA 12.4 (public index). Change cu124 -> cu121/cpu to match your CUDA.
       - --extra-index-url https://download.pytorch.org/whl/cu124
       - torch==2.6.0
       - torchvision==0.21.0
-      # core
       - numpy==2.2.6
       - opencv-python==4.13.0.92
       - scipy==1.15.3
@@ -22,12 +22,7 @@ dependencies:
       - tqdm==4.67.3
       - pillow==11.3.0
       - pyyaml==6.0.3
-      # optional logging (else viz dumps as local PNGs)
-      - wandb==0.25.1
-      # simulator — needed only for prerender.py + eval.py
-      - robosuite==1.4.0
-      - bddl==1.0.1
-      - robomimic==0.2.0
-      # LIBERO (demos + task files) — install from git, see README:
-      #   pip install git+https://github.com/Lifelong-Robot-Learning/LIBERO.git
-      # DINOv3 weights are downloaded separately (see README / bind/model.py).
+      - wandb==0.25.1       # optional --wandb logging (default is local-PNG viz)
+# If torch fails to import with 'libcudnn.so.9 not found', run:
+#   pip install --force-reinstall nvidia-cudnn-cu12
+# DINOv3 weights are downloaded separately (see README / bind/model.py).

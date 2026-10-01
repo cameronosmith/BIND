@@ -13,92 +13,86 @@ one LIBERO task (`libero_spatial` → *"pick up the black bowl from table center
 place it on the plate"*), with the same visualizations and closed-loop eval we use
 internally.
 
-<p align="center"><em>per-waypoint volume heatmaps (scene / wrist) + GT-vs-pred keypoints + closed-loop rollout</em></p>
+> **TL;DR (train, no simulator needed):**
+> ```bash
+> conda env create -f environment.yml && conda activate bind
+> export DINOV3_WEIGHTS=/path/to/dinov3_vits16plus_pretrain_lvd1689m-4057cbaa.pth
+> bash scripts/download_data.sh           # ~0.4 GB packaged dataset -> ./data
+> python train.py --cache_root ./data --task_ids 2
+> ```
 
-## Environment
+## Two environments
 
-Reference setup (what this was built and tested on):
+The training stack (modern PyTorch) and the LIBERO simulator (older `numpy`/`robosuite`
+pins) **cannot coexist in one env**, so there are two:
 
-| | |
-|---|---|
-| Python | 3.10 |
-| PyTorch | 2.6.0 (CUDA 12.4) · torchvision 0.21.0 |
-| numpy / opencv / scipy | 2.2.6 / 4.13.0.92 / 1.15.3 |
-| simulator (prerender + eval) | robosuite 1.4.0 · LIBERO 0.1.1 (pulls a compatible MuJoCo) |
-
-**Conda (recommended):**
-
-```bash
-conda env create -f environment.yml
-conda activate bind
-```
-
-**Or pip** (into a Python 3.10 venv):
+| env | file | used for |
+|---|---|---|
+| `bind` | `environment.yml` / `requirements.txt` | **training** (+ the packaged dataset) — no simulator |
+| `bind-sim` | `environment-sim.yml` / `requirements-sim.txt` | `prerender.py` + `eval.py` (LIBERO sim) |
 
 ```bash
-pip install -r requirements.txt
+conda env create -f environment.yml        # training env 'bind'
+conda env create -f environment-sim.yml     # simulator env 'bind-sim' (only if you prerender/eval)
 ```
+Reference setup: Python 3.10, PyTorch 2.6.0 (CUDA 12.4), numpy 2.2.6 (train) / 1.26.4 (sim).
+If `import torch` fails with `libcudnn.so.9 not found`: `pip install --force-reinstall nvidia-cudnn-cu12`.
 
-Both pin PyTorch 2.6.0 for CUDA 12.4 via the public PyTorch index; adjust the
-`--extra-index-url` (e.g. `cu121`, `cpu`) if your CUDA differs. Training needs only
-the core deps; `robosuite` + `LIBERO` are required for `prerender.py` and `eval.py`.
-
-**LIBERO** (demos + task `.bddl` files) — install from git:
-
-```bash
-pip install "git+https://github.com/Lifelong-Robot-Learning/LIBERO.git"
-```
-
-**DINOv3 backbone.** The model loads DINOv3 ViT-S/16+ via `torch.hub`. Download the
-checkpoint from Meta's official release (<https://github.com/facebookresearch/dinov3>,
-license-gated) and point an env var at it:
-
+**DINOv3 backbone.** Download the ViT-S/16+ checkpoint from Meta's official release
+(<https://github.com/facebookresearch/dinov3>, license-gated) and point an env var at it:
 ```bash
 export DINOV3_WEIGHTS=/path/to/dinov3_vits16plus_pretrain_lvd1689m-4057cbaa.pth
-# optional: a local clone of the dinov3 repo (otherwise pulled from the hub)
-export DINOV3_REPO=/path/to/dinov3
+export DINOV3_REPO=/path/to/dinov3   # optional local clone; else pulled from torch hub
+```
+
+**LIBERO** (only for `prerender.py` / `eval.py`) — install editable so its task files register:
+```bash
+conda activate bind-sim
+git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git
+cd LIBERO && pip install -e . && cd ..
 ```
 
 ## Get the data
 
-The 2-view cache (per-demo scene+wrist frames + camera calibration + EE trajectory)
-is built from the official LIBERO demos:
+**Option A — packaged dataset (recommended).** The 2-view cache (scene+wrist frames +
+camera calibration + EE trajectory, 49 demos, JPG, ~0.4 GB). No simulator required:
+```bash
+bash scripts/download_data.sh            # -> ./data/libero_spatial/task_2/
+```
 
+**Option B — regenerate from official LIBERO demos** (needs the `bind-sim` env + LIBERO):
 ```bash
 python prerender.py --benchmark libero_spatial --task_ids 2 --out_root ./data
 ```
 
-This writes `./data/libero_spatial/task_2/demo_*/` with the frames and `.npy`
-calibration/trajectory files that the dataloader reads. (`task_id 2` is the bowl task;
-use `--task_ids all` for the whole suite.)
-
 ## Train
 
-Training only needs the cache above (no simulator):
-
+Training needs only the `bind` env + the data above (no simulator):
 ```bash
 python train.py --cache_root ./data --task_ids 2
 ```
-
 Defaults reproduce the reference run: scene+wrist, `n_window=8`, `img_size=448`,
 lr `5e-5`, batch 16, 30 epochs. Checkpoints land in `./checkpoints/bind_bowl/latest.pth`.
 
-**Visualization.** By default, panels are dumped as PNGs to `./viz_out/` every 500
-steps — for both a training batch and a held-out **val** batch:
-- `heatmap_grid` — the per-waypoint volume confidence, stacked `t=0..T-1`, scene row over wrist row.
-- `kp_gt_vs_pred` — GT (green) vs argmax-predicted (red) waypoints projected on scene + wrist.
+**Visualization.** By default, panels dump as PNGs to `./viz_out/` every 500 steps —
+for both a training batch and a held-out **val** batch:
+- `heatmap_grid` — per-waypoint volume confidence, stacked `t=0..T-1`, scene row over wrist row.
+- `kp_gt_vs_pred` — GT (green) vs argmax-predicted (red) waypoints on scene + wrist.
 - `z_bins` — the per-view height-bin marginal.
 
 Pass `--wandb` to log these (and loss / `val/xyz_err_mm`) to Weights & Biases instead.
 
 ## Evaluate (closed-loop)
 
+Needs the `bind-sim` env (LIBERO):
 ```bash
-python eval.py --checkpoint ./checkpoints/bind_bowl/latest.pth --task_id 2 --teleport --out_dir ./out
+python eval.py --checkpoint ./checkpoints/bind_bowl/latest.pth \
+    --benchmark libero_spatial --task_id 2 --teleport --n_episodes 6 \
+    --save_video_dir ./out --viz_rollout_dir ./out/panels
 ```
-
-Runs a teleport-servo rollout in the LIBERO sim and saves per-episode videos with the
-predicted keypoints overlaid on scene + wrist, plus the success rate.
+Runs a teleport-servo rollout in the LIBERO sim, prints the success rate, and (with the
+flags above) saves per-episode rollout mp4s (`--save_video_dir`) and per-inference panels
+with the 8-waypoint keypoints + per-timestep heatmaps (`--viz_rollout_dir`).
 
 ## How it works (one paragraph)
 

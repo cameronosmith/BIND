@@ -1,0 +1,20 @@
+# SIMULATOR deps for prerender.py + eval.py (pip, Python 3.10). Install in a
+# SEPARATE env from the training one, then install LIBERO editable:
+#   git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git
+#   cd LIBERO && pip install -e . && cd ..
+--extra-index-url https://download.pytorch.org/whl/cu124
+torch==2.6.0
+torchvision==0.21.0
+numpy==1.26.4          # LIBERO needs numpy<2
+opencv-python==4.13.0.92
+scipy==1.15.3
+h5py==3.16.0
+tqdm==4.67.3
+pillow==11.3.0
+pyyaml==6.0.3
+wandb==0.25.1          # pin AFTER LIBERO (it tries to downgrade wandb)
+robosuite==1.4.1       # 1.4.0 throws on env build
+bddl==1.0.1
+robomimic==0.2.0
+future
+easydict

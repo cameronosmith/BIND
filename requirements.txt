@@ -1,4 +1,7 @@
-# pip install -r requirements.txt   (Python 3.10; PyTorch 2.6.0 + CUDA 12.4)
+# TRAINING deps (pip, Python 3.10). With the packaged dataset you need only these.
+#   pip install -r requirements.txt
+# For prerender.py / eval.py (LIBERO sim) use requirements-sim.txt in a SEPARATE
+# env (its older numpy/wandb pins conflict with this modern stack).
 --extra-index-url https://download.pytorch.org/whl/cu124
 torch==2.6.0
 torchvision==0.21.0
@@ -9,12 +12,7 @@ h5py==3.16.0
 tqdm==4.67.3
 pillow==11.3.0
 pyyaml==6.0.3
-# optional (for --wandb logging; default is local PNG viz)
 wandb==0.25.1
-# simulator — needed only for prerender.py + eval.py
-robosuite==1.4.0
-bddl==1.0.1
-robomimic==0.2.0
-# LIBERO (demos + task bddl files), installed from git:
-#   pip install git+https://github.com/Lifelong-Robot-Learning/LIBERO.git
-# DINOv3 backbone weights are downloaded separately — see README.
+# If torch import fails with 'libcudnn.so.9 not found':
+#   pip install --force-reinstall nvidia-cudnn-cu12
+# DINOv3 weights are downloaded separately — see README.

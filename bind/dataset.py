@@ -81,13 +81,16 @@ class CachedTrajectory2ViewDataset(Dataset):
             if not task_dir.exists():
                 continue
             task_demo_count = 0
+            def _frames(d):  # accept the packaged .jpg asset or prerendered .png
+                fs = sorted(d.glob("*.jpg"))
+                return fs if fs else sorted(d.glob("*.png"))
             for demo_dir in sorted(task_dir.glob("demo_*")):
                 if max_demos > 0 and task_demo_count >= max_demos:
                     break
                 if not (demo_dir / "actions.npy").exists():
                     continue   # skip partially-rendered demos (prerender writes actions.npy LAST)
-                bev_frames   = sorted((demo_dir / "frames_bev").glob("*.png"))
-                wrist_frames = sorted((demo_dir / "frames_wrist").glob("*.png"))
+                bev_frames   = _frames(demo_dir / "frames_bev")
+                wrist_frames = _frames(demo_dir / "frames_wrist")
                 if not bev_frames or len(bev_frames) != len(wrist_frames):
                     continue
                 T = len(bev_frames)

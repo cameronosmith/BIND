@@ -1,0 +1,32 @@
+# Conda env for the LIBERO SIMULATOR side of BIND: prerender.py + eval.py.
+# Kept SEPARATE from the training env (environment.yml) because LIBERO/robosuite
+# pin an older numpy/wandb that conflicts with the modern training stack.
+#   conda env create -f environment-sim.yml && conda activate bind-sim
+# Then install LIBERO itself (editable, so its bddl task files register):
+#   git clone https://github.com/Lifelong-Robot-Learning/LIBERO.git
+#   cd LIBERO && pip install -e . && cd ..
+name: bind-sim
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu124
+      - torch==2.6.0
+      - torchvision==0.21.0
+      - numpy==1.26.4          # LIBERO needs numpy<2
+      - opencv-python==4.13.0.92
+      - scipy==1.15.3
+      - h5py==3.16.0
+      - tqdm==4.67.3
+      - pillow==11.3.0
+      - pyyaml==6.0.3
+      - wandb==0.25.1          # pin AFTER LIBERO (it tries to downgrade wandb)
+      - robosuite==1.4.1       # 1.4.0 throws on env build; 1.4.1 works
+      - bddl==1.0.1
+      - robomimic==0.2.0
+      - future
+      - easydict
+# MuJoCo is pulled in transitively by robosuite. Set MUJOCO_GL=egl for headless render.
+# If torch complains about libcudnn.so.9: pip install --force-reinstall nvidia-cudnn-cu12
