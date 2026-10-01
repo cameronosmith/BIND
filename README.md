@@ -3,7 +3,7 @@
 **Binding 3D Robot Actions to 2D Image Features.**
 
 <p align="center">
-  <img src="assets/method.svg" width="860" alt="BIND method overview: a traditional policy regresses the end-effector action from a global image token, whereas BIND projects each candidate 3D action into the multi-view feature maps, scores it with a small MLP into a probability volume, and takes the argmax voxel as the predicted waypoint.">
+  <img src="assets/method_overview.png" width="860" alt="BIND method overview: a traditional policy regresses the end-effector action from a global image token, whereas BIND projects each candidate 3D action into the multi-view feature maps, scores it with a small MLP into a probability volume, and takes the argmax voxel as the predicted waypoint.">
 </p>
 
 Disclaimer: The instructions below and all the code in this repo are all coding-agent generated. You're probably going to point your agents here anyway. Raise issues for anything broken or missing but it was tested in a sandbox and trained/eval'd fine.
