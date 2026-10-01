@@ -6,6 +6,8 @@
   <img src="assets/method.svg" width="860" alt="BIND method overview: a traditional policy regresses the end-effector action from a global image token, whereas BIND projects each candidate 3D action into the multi-view feature maps, scores it with a small MLP into a probability volume, and takes the argmax voxel as the predicted waypoint.">
 </p>
 
+Disclaimer: The instructions below and all the code in this repo are all coding-agent generated. You're probably going to point your agents here anyway. Raise issues for anything broken or missing but it was tested in a sandbox and trained/eval'd fine.
+
 BIND is a visuomotor policy that predicts a robot's future end-effector waypoints
 as a probability distribution over a **discretized 3D world voxel grid**, scored
 directly from DINOv3 image features across multiple camera views. The argmax voxel
